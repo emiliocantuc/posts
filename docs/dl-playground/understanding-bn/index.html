@@ -221,6 +221,8 @@ O_{b, c, x, y} \leftarrow \gamma_c \frac{I_{b, c, x, y} - \hat \mu_c}{\sqrt{\hat
 <h3 class="anchored" data-anchor-id="experimental-setup">Experimental setup</h3>
 <p>Let’s set up our data loaders, model, and training loop as described in Appendix B of the paper.</p>
 <div id="cell-6" class="cell" data-execution_count="1">
+<details class="code-fold">
+<summary>Imports and model evaluation function</summary>
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch.nn <span class="im">as</span> nn</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch.optim <span class="im">as</span> optim</span>
@@ -260,10 +262,13 @@ O_{b, c, x, y} \leftarrow \gamma_c \frac{I_{b, c, x, y} - \hat \mu_c}{\sqrt{\hat
 <span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> loss <span class="op">/</span> <span class="bu">len</span>(test.dataset), correct <span class="op">/</span> <span class="bu">len</span>(test.dataset)</span>
 <span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>device</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <p>The paper trains ResNet-110s on CIFAR-10, with channel-wise normalization, random horizontal flipping, and 32-by-32 cropping with 4-pixel zero padding. We’ll train the ResNet-101 included in torchvision but keep everything the same.</p>
 <p>We first get the datasets and compute the channel-wise means and variances. Note: both the training and validation set have the same values.</p>
 <div id="cell-8" class="cell" data-execution_count="3">
+<details class="code-fold">
+<summary>Datasets and channel-wise means and stds</summary>
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>train_set <span class="op">=</span> datasets.CIFAR10(<span class="st">'./data'</span>, download <span class="op">=</span> <span class="va">True</span>, train <span class="op">=</span> <span class="va">True</span>, transform <span class="op">=</span> transforms.ToTensor())</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>val_set <span class="op">=</span> datasets.CIFAR10(<span class="st">'./data'</span>, download <span class="op">=</span> <span class="va">True</span>, train <span class="op">=</span> <span class="va">False</span>, transform <span class="op">=</span> transforms.ToTensor())</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -276,9 +281,12 @@ O_{b, c, x, y} \leftarrow \gamma_c \frac{I_{b, c, x, y} - \hat \mu_c}{\sqrt{\hat
 <span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>means, stds <span class="op">=</span> channel_means_stds(val_set)</span>
 <span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f'Validation channel-wise</span><span class="ch">\n\t</span><span class="ss">means: </span><span class="sc">{</span>means<span class="sc">}</span><span class="ch">\n\t</span><span class="ss">stds: </span><span class="sc">{</span>stds<span class="sc">}</span><span class="ss">'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <p>We now define the transforms with data augmentation and data loaders with batch size <span class="math inline">\(128\)</span>.</p>
 <div id="cell-10" class="cell" data-execution_count="4">
+<details class="code-fold">
+<summary>Data transforms and data loaders</summary>
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>train_transform <span class="op">=</span> transforms.Compose([</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    transforms.RandomCrop(<span class="dv">32</span>, padding <span class="op">=</span> <span class="dv">4</span>),</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    transforms.RandomHorizontalFlip(),</span>
@@ -297,12 +305,15 @@ O_{b, c, x, y} \leftarrow \gamma_c \frac{I_{b, c, x, y} - \hat \mu_c}{\sqrt{\hat
 <span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>train_loader <span class="op">=</span> DataLoader(train_set, batch_size <span class="op">=</span> <span class="dv">128</span>, shuffle <span class="op">=</span> <span class="va">True</span>)</span>
 <span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>val_loader <span class="op">=</span> DataLoader(val_set, batch_size <span class="op">=</span> <span class="dv">128</span>, shuffle <span class="op">=</span> <span class="va">False</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <p>We’ll use <code>torchvision</code>’s implementation of ResNet-101, Xavier initialization, SGD with momentum <span class="math inline">\(0.9\)</span> and weight decay <span class="math inline">\(5\times 10^{-4}\)</span>, and cross-entropy loss. We try to implement the training details and learning rate scheduling as mentioned in the paper:</p>
 <blockquote class="blockquote">
 <p>“Initially, all models are trained for 165 epochs and as in [17] we divide the learning rate by 10 after epoch 50% and 75%, at which point learning has typically plateued. If learning doesn’t plateu for some number of epochs, we roughly double the number of epochs until it does”.</p>
 </blockquote>
 <div id="cell-12" class="cell" data-execution_count="9">
+<details class="code-fold">
+<summary>Init, and train functions</summary>
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> xavier_init(m):</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">isinstance</span>(m, nn.Conv2d) <span class="kw">or</span> <span class="bu">isinstance</span>(m, nn.Linear):</span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>        nn.init.xavier_uniform_(m.weight)</span>
@@ -375,6 +386,7 @@ O_{b, c, x, y} \leftarrow \gamma_c \frac{I_{b, c, x, y} - \hat \mu_c}{\sqrt{\hat
 <span id="cb4-70"><a href="#cb4-70" aria-hidden="true" tabindex="-1"></a>              <span class="ss">f'Validation accuracy: </span><span class="sc">{</span>val_accs[<span class="op">-</span><span class="dv">1</span>]<span class="sc">:.4f}</span><span class="ss">'</span>)</span>
 <span id="cb4-71"><a href="#cb4-71" aria-hidden="true" tabindex="-1"></a>        </span>
 <span id="cb4-72"><a href="#cb4-72" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> train_losses, train_accs, val_losses, val_accs</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <p>And we define a function to disable batch norm layers in a model by replacing them with identity layers:</p>
 <div id="cell-14" class="cell" data-execution_count="6">
@@ -391,6 +403,8 @@ O_{b, c, x, y} \leftarrow \gamma_c \frac{I_{b, c, x, y} - \hat \mu_c}{\sqrt{\hat
 <p>Figure 1 aims to demonstrate that batch norm’s primary benefit is that it allows training with larger learning rates.</p>
 <p>The authors find the highest (<em>initial</em>) learning rate with which they can train an unnormalized model (<span class="math inline">\(\alpha = 0.0001\)</span>) and compare its performance with normalized models trained with <span class="math inline">\(\alpha \in \{0.0001, 0.003, 0.1\}\)</span>. We train each model once (instead of five times to save on compute) and present train and test accuracy curves.</p>
 <div id="cell-16" class="cell" data-execution_count="7">
+<details class="code-fold">
+<summary>Train models</summary>
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>MODELS_DIR <span class="op">=</span> <span class="st">'models'</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>LOGS_DIR <span class="op">=</span> <span class="st">'logs'</span></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -408,8 +422,11 @@ O_{b, c, x, y} \leftarrow \gamma_c \frac{I_{b, c, x, y} - \hat \mu_c}{\sqrt{\hat
 <span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>    data <span class="op">=</span> train(model, train_loader, val_loader, init_lr <span class="op">=</span> lr)</span>
 <span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>    torch.save(model, <span class="ss">f'</span><span class="sc">{</span>MODELS_DIR<span class="sc">}</span><span class="ss">/</span><span class="sc">{</span>s<span class="sc">}</span><span class="ss">_end.pth'</span>)</span>
 <span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>    torch.save(data, <span class="ss">f'</span><span class="sc">{</span>LOGS_DIR<span class="sc">}</span><span class="ss">/</span><span class="sc">{</span>s<span class="sc">}</span><span class="ss">.pth'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <div id="cell-17" class="cell" data-execution_count="108">
+<details class="code-fold">
+<summary>Code</summary>
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># code-summary: Plot results</span></span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>get_x <span class="op">=</span> <span class="kw">lambda</span> x: <span class="dv">100</span> <span class="op">*</span> np.arange(<span class="dv">1</span>, <span class="bu">len</span>(x) <span class="op">+</span> <span class="dv">1</span>) <span class="op">/</span> <span class="bu">len</span>(x)</span>
@@ -428,6 +445,7 @@ O_{b, c, x, y} \leftarrow \gamma_c \frac{I_{b, c, x, y} - \hat \mu_c}{\sqrt{\hat
 <span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>ax1.set_ylabel(<span class="st">'Training accuracy'</span>)<span class="op">;</span> ax2.set_ylabel(<span class="st">'Validation accuracy'</span>)</span>
 <span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>ax1.set_xlabel(<span class="st">'</span><span class="sc">% o</span><span class="st">f training'</span>)<span class="op">;</span> ax2.set_xlabel(<span class="st">'</span><span class="sc">% o</span><span class="st">f training'</span>)</span>
 <span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>f.tight_layout()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 <div class="cell-output cell-output-stdout">
 <pre><code>lr=0.1_bn took 83 epochs
 lr=0.0001 took 263 epochs
@@ -498,6 +516,8 @@ lr=0.0001_bn took 211 epochs</code></pre>
 </div>
 <p>Although the unnormalized gradients are heavy-tailed, they are still much smaller than the normalized ones. I was stuck on this issue for a few days until I experimented with different initializations:</p>
 <div id="cell-22" class="cell" data-execution_count="24">
+<details class="code-fold">
+<summary>Trying other inits</summary>
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> init_func(f, also_linear <span class="op">=</span> <span class="va">True</span>):</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> init(m):</span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="bu">isinstance</span>(m, nn.Conv2d):</span>
@@ -537,8 +557,11 @@ lr=0.0001_bn took 211 epochs</code></pre>
 <span id="cb10-37"><a href="#cb10-37" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb10-38"><a href="#cb10-38" aria-hidden="true" tabindex="-1"></a>                model.<span class="bu">eval</span>()</span>
 <span id="cb10-39"><a href="#cb10-39" aria-hidden="true" tabindex="-1"></a>                d[init_name <span class="op">+</span> lin_name] <span class="op">=</span> model.layer3[<span class="dv">9</span>].conv1.weight.grad.view(<span class="op">-</span><span class="dv">1</span>).cpu().detach().numpy()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <div id="cell-23" class="cell" data-execution_count="25">
+<details class="code-fold">
+<summary>Plotting the results</summary>
 <div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> init_name, v <span class="kw">in</span> with_bn.items():</span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    f, (ax1, ax2) <span class="op">=</span> plt.subplots(<span class="dv">1</span>, <span class="dv">2</span>, figsize <span class="op">=</span> (<span class="dv">8</span>, <span class="dv">3</span>))</span>
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    sns.histplot(v, ax <span class="op">=</span> ax1)</span>
@@ -549,6 +572,7 @@ lr=0.0001_bn took 211 epochs</code></pre>
 <span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>    ax2.set_ylim(<span class="dv">0</span>, <span class="dv">1500</span>)</span>
 <span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>    f.suptitle(init_name)</span>
 <span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>    f.tight_layout()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
@@ -620,6 +644,8 @@ lr=0.0001_bn took 211 epochs</code></pre>
 <p>The authors then investigate the loss landscape along the gradient direction for the first few mini-batches for models with BN (trained with <span class="math inline">\(\alpha = 0.1\)</span>) and without BN (<span class="math inline">\(\alpha = 0.0001\)</span>). For each network and mini-batch they compute the gradient and plot the relative change in the loss (new_loss/old_loss).</p>
 <p>We save the model’s and optimizer’s states (<code>state_dict</code>) before taking the tentative steps to explore the landscape and restore them before taking the actual step between batches.</p>
 <div id="cell-28" class="cell" data-execution_count="57">
+<details class="code-fold">
+<summary>Explore loss landscape</summary>
 <div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> fig3(model, init_lr, log_lrs, log_batches <span class="op">=</span> [<span class="dv">1</span>, <span class="dv">4</span>, <span class="dv">7</span>]):</span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    <span class="co"># batch -&gt; list of relative losses for each lr</span></span>
@@ -694,8 +720,11 @@ lr=0.0001_bn took 211 epochs</code></pre>
 <span id="cb13-72"><a href="#cb13-72" aria-hidden="true" tabindex="-1"></a>disable_bn(model)</span>
 <span id="cb13-73"><a href="#cb13-73" aria-hidden="true" tabindex="-1"></a>model.<span class="bu">apply</span>(init_net)</span>
 <span id="cb13-74"><a href="#cb13-74" aria-hidden="true" tabindex="-1"></a>without_bn <span class="op">=</span> fig3(model, init_lr <span class="op">=</span> <span class="fl">0.0001</span>, log_lrs <span class="op">=</span> lrs)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <div id="cell-29" class="cell" data-execution_count="65">
+<details class="code-fold">
+<summary>Plotting the results</summary>
 <div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>f, axs <span class="op">=</span> plt.subplots(<span class="dv">2</span>, <span class="dv">3</span>, figsize <span class="op">=</span> (<span class="dv">12</span>, <span class="dv">6</span>))</span>
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (batch, rel_losses), ax <span class="kw">in</span> <span class="bu">zip</span>(with_bn.items(), axs[<span class="dv">0</span>]):</span>
@@ -719,6 +748,7 @@ lr=0.0001_bn took 211 epochs</code></pre>
 <span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a>axs[<span class="dv">0</span>, <span class="dv">0</span>].set_ylabel(<span class="st">'Relative loss'</span>)</span>
 <span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a>axs[<span class="dv">1</span>, <span class="dv">0</span>].set_ylabel(<span class="st">'Relative loss'</span>)</span>
 <span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a>f.tight_layout()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
@@ -733,6 +763,8 @@ lr=0.0001_bn took 211 epochs</code></pre>
 <h3 class="anchored" data-anchor-id="fig-5">Fig 5</h3>
 <p>Figures 5 and 6 explore the behavior of networks at initialization. Figure 5 displays the mean and variances of channels in the network as a function of depth at initialization. We initialize <span class="math inline">\(10\)</span> networks and use forward hooks to log their channel mean and standard deviations.</p>
 <div id="cell-33" class="cell" data-execution_count="45">
+<details class="code-fold">
+<summary>Log activation stats</summary>
 <div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> []</span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> log_activation_stats(layer_name, key):</span>
@@ -769,8 +801,11 @@ lr=0.0001_bn took 211 epochs</code></pre>
 <span id="cb15-34"><a href="#cb15-34" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> images, _ <span class="kw">in</span> val_loader: model(images.to(device))</span>
 <span id="cb15-35"><a href="#cb15-35" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb15-36"><a href="#cb15-36" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> pd.DataFrame(df)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <div id="cell-34" class="cell" data-execution_count="46">
+<details class="code-fold">
+<summary>Code</summary>
 <div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>f, (ax1, ax2) <span class="op">=</span> plt.subplots(<span class="dv">1</span>, <span class="dv">2</span>, figsize <span class="op">=</span> (<span class="dv">9</span>, <span class="dv">4</span>))</span>
 <span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>sns.lineplot(data <span class="op">=</span> df, x <span class="op">=</span> <span class="st">'layer'</span>, y <span class="op">=</span> <span class="st">'mean'</span>, hue <span class="op">=</span> <span class="st">'bn'</span>, ax <span class="op">=</span> ax1)</span>
@@ -780,6 +815,7 @@ lr=0.0001_bn took 211 epochs</code></pre>
 <span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>ax2.set_yscale(<span class="st">'log'</span>)</span>
 <span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>f.tight_layout()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
@@ -795,6 +831,8 @@ lr=0.0001_bn took 211 epochs</code></pre>
 <p>The large activations in the final layers for unnormalized networks in the previous figure make us suspect that networks are biased towards a class. The authors investigate whether this is the case by looking at the gradients in the final (output) layer across images in a mini-batch and classes.</p>
 <p>Note: Don’t confuse this with the last fully connected layer of the network. We are looking at the gradients of the output logits themselves. We need to use <code>retain_grad</code> on the output (non-leaf node) to calculate its gradient on the backward pass.</p>
 <div id="cell-37" class="cell" data-execution_count="69">
+<details class="code-fold">
+<summary>Generate heatmaps</summary>
 <div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>f, (ax1, ax2) <span class="op">=</span> plt.subplots(<span class="dv">1</span>, <span class="dv">2</span>, figsize <span class="op">=</span> (<span class="dv">8</span>, <span class="dv">3</span>), sharey <span class="op">=</span> <span class="va">True</span>, sharex <span class="op">=</span> <span class="va">True</span>)</span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>images, labels <span class="op">=</span> <span class="bu">next</span>(<span class="bu">iter</span>(val_loader))</span>
@@ -819,6 +857,7 @@ lr=0.0001_bn took 211 epochs</code></pre>
 <span id="cb17-22"><a href="#cb17-22" aria-hidden="true" tabindex="-1"></a>    ax.set_title(<span class="st">'With BN'</span> <span class="cf">if</span> bn <span class="cf">else</span> <span class="st">'Without BN'</span>)</span>
 <span id="cb17-23"><a href="#cb17-23" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb17-24"><a href="#cb17-24" aria-hidden="true" tabindex="-1"></a>f.tight_layout()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
@@ -833,6 +872,8 @@ lr=0.0001_bn took 211 epochs</code></pre>
 </blockquote>
 <p>Running the above code multiple times, however, sometimes results in two or three yellow columns. We think this is because different mini-batches behave slightly differently or due to initialization randomness. Below, we log and average the gradients for a whole epoch and find much more consistent behavior.</p>
 <div id="cell-40" class="cell" data-execution_count="370">
+<details class="code-fold">
+<summary>Code</summary>
 <div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> fig6(init_func <span class="op">=</span> init_net):</span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>    f, (ax1, ax2) <span class="op">=</span> plt.subplots(<span class="dv">1</span>, <span class="dv">2</span>, figsize <span class="op">=</span> (<span class="dv">8</span>, <span class="dv">3</span>), sharex <span class="op">=</span> <span class="va">True</span>, sharey <span class="op">=</span> <span class="va">True</span>)</span>
@@ -864,6 +905,7 @@ lr=0.0001_bn took 211 epochs</code></pre>
 <span id="cb18-29"><a href="#cb18-29" aria-hidden="true" tabindex="-1"></a>    f.tight_layout()</span>
 <span id="cb18-30"><a href="#cb18-30" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb18-31"><a href="#cb18-31" aria-hidden="true" tabindex="-1"></a>fig6()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">

@@ -199,6 +199,8 @@ window.Quarto = {
 
 <p>Where I attempt to solve the exercises in <a href="https://d2l.ai/chapter_convolutional-neural-networks/lenet.html">section 7.6 of the d2l book</a> from scratch in pytorch (without using the d2l library).</p>
 <div id="7484a553-d61f-48f8-886b-209f89001cab" class="cell" data-execution_count="15">
+<details class="code-fold">
+<summary>Imports</summary>
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="op">!</span>pip3 install matplotlib</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch</span>
@@ -215,6 +217,7 @@ window.Quarto = {
 <span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> os, itertools, time</span>
 <span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> <span class="st">'cuda'</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <section id="context" class="level2">
 <h2 class="anchored" data-anchor-id="context">Context</h2>
@@ -258,6 +261,8 @@ window.Quarto = {
 <p>And try to train it without using the d2l library.</p>
 <p>We first get our dataset and dataloaders. We’ll wrap it in a function for convinience later.</p>
 <div id="2e3b8c3b-8bc6-428a-91f6-a23016596e8a" class="cell" data-execution_count="17">
+<details class="code-fold">
+<summary>Get data and loaders</summary>
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_data(dataset, batch_size):</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    </span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    data_params <span class="op">=</span> {<span class="st">'root'</span>: <span class="st">'data'</span>, <span class="st">'transform'</span>: transforms.ToTensor(), <span class="st">'download'</span>: <span class="va">True</span>}</span>
@@ -270,9 +275,12 @@ window.Quarto = {
 <span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> train_dataset, test_dataset, train_loader, test_loader</span>
 <span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>_, _, train_loader, test_loader <span class="op">=</span> get_data(datasets.FashionMNIST, <span class="dv">128</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <p>And functions to evaluate our models and plot losses.</p>
 <div id="8f1cdea6-e8f9-46de-a234-0df2b2be8e41" class="cell" data-execution_count="18">
+<details class="code-fold">
+<summary>Model eval and loss ploting functions</summary>
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> eval_model(model, test_loader):  </span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    model.<span class="bu">eval</span>()</span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    correct <span class="op">=</span> <span class="dv">0</span></span>
@@ -288,9 +296,12 @@ window.Quarto = {
 <span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    plt.plot(losses)</span>
 <span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    plt.xlabel(<span class="st">'Epoch'</span>)<span class="op">;</span> plt.ylabel(<span class="st">'Cross Entropy Loss'</span>)</span>
 <span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    plt.title(<span class="ss">f'Test Accuracy: </span><span class="sc">{</span>test_acc<span class="sc">:.2f}</span><span class="ss">'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <p>And finally train it using SGD with learning rate 0.1 for 15 epochs</p>
 <div id="c421f655-ef79-4f63-96c3-96370a15fa62" class="cell" data-execution_count="20">
+<details class="code-fold">
+<summary>Code</summary>
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> train(net, train_loader, lr <span class="op">=</span> <span class="fl">0.1</span>, epochs <span class="op">=</span> <span class="dv">15</span>, verbose <span class="op">=</span> <span class="va">True</span>):</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Infer input shapes, initialize weights and move to device</span></span>
@@ -321,6 +332,7 @@ window.Quarto = {
 <span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>losses <span class="op">=</span> train(net, train_loader, verbose <span class="op">=</span> <span class="va">False</span>)</span>
 <span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>test_acc <span class="op">=</span> eval_model(net, test_loader) </span>
 <span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>plot_results(losses, test_acc)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
@@ -359,10 +371,13 @@ window.Quarto = {
 <span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">self</span>.net(X)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div id="f7b92615-5871-4086-9e07-6d74e71d26e2" class="cell" data-execution_count="7">
+<details class="code-fold">
+<summary>Code</summary>
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>net <span class="op">=</span> ModernLeNet(<span class="dv">10</span>)</span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>losses <span class="op">=</span> train(net, train_loader, verbose <span class="op">=</span> <span class="va">False</span>)</span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>test_acc <span class="op">=</span> eval_model(net, test_loader) </span>
 <span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>plot_results(losses, test_acc) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
@@ -403,6 +418,8 @@ window.Quarto = {
 </div>
 <p>Let’s try adjusting the convolution window size <span class="math inline">\(c_w \in \{3,..,7\}\)</span>. We’ll train 5 nets per size and report the average:</p>
 <div id="99ffb1ae-b8f5-468f-b24e-c8aea0874589" class="cell" data-execution_count="9">
+<details class="code-fold">
+<summary>Changing convolution window size</summary>
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>n_avg <span class="op">=</span> <span class="dv">5</span></span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>conv_sizes <span class="op">=</span> <span class="bu">range</span>(<span class="dv">3</span>, <span class="dv">7</span> <span class="op">+</span> <span class="dv">1</span>)</span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>test_accs <span class="op">=</span> []</span>
@@ -416,6 +433,7 @@ window.Quarto = {
 <span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>plt.plot(conv_sizes, test_accs)</span>
 <span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">'Convolution kernel size'</span>)<span class="op">;</span> plt.ylabel(<span class="st">'Test Accuracy'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 <div class="cell-output cell-output-display" data-execution_count="9">
 <pre><code>Text(0, 0.5, 'Test Accuracy')</code></pre>
 </div>
@@ -433,6 +451,8 @@ window.Quarto = {
 </ol>
 <p>We can try halving, doubling and tripling the original [6, 16] output channels:</p>
 <div id="6172cfd7-0279-4e5c-a574-50e4caf0a9ce" class="cell" data-execution_count="10">
+<details class="code-fold">
+<summary>Changing output channel sizes</summary>
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>n_avg <span class="op">=</span> <span class="dv">3</span></span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>out_channels <span class="op">=</span> [[<span class="dv">3</span>, <span class="dv">8</span>], [<span class="dv">6</span>, <span class="dv">16</span>], [<span class="dv">12</span>, <span class="dv">22</span>], [<span class="dv">24</span>, <span class="dv">44</span>]]</span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> []</span>
@@ -446,6 +466,7 @@ window.Quarto = {
 <span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> pd.DataFrame(df)</span>
 <span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>df</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 <div class="cell-output cell-output-display" data-execution_count="10">
 <div>
 
@@ -491,6 +512,8 @@ window.Quarto = {
 </ol>
 <p>Lets try adding up to 2 additional convolution layers:</p>
 <div id="36e91861-190e-4046-b680-6b1c1957769e" class="cell" data-execution_count="11">
+<details class="code-fold">
+<summary>Adding convolution layers</summary>
 <div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>n_avg <span class="op">=</span> <span class="dv">3</span></span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>out_channels <span class="op">=</span> [[<span class="dv">6</span>, <span class="dv">16</span>], [<span class="dv">6</span>, <span class="dv">16</span>, <span class="dv">22</span>], [<span class="dv">6</span>, <span class="dv">16</span>, <span class="dv">22</span>, <span class="dv">28</span>]]</span>
 <span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>test_accs <span class="op">=</span> []</span>
@@ -505,6 +528,7 @@ window.Quarto = {
 <span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>plt.plot([<span class="bu">len</span>(i) <span class="cf">for</span> i <span class="kw">in</span> out_channels], test_accs)</span>
 <span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">'# of convolution layers'</span>)<span class="op">;</span> plt.ylabel(<span class="st">'Test Accuracy'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 <div class="cell-output cell-output-display" data-execution_count="11">
 <pre><code>Text(0, 0.5, 'Test Accuracy')</code></pre>
 </div>
@@ -522,6 +546,8 @@ window.Quarto = {
 </ol>
 <p>Lets try 1, the original 2, 4, and 6 layers:</p>
 <div id="3c9316d4-b345-4caf-aea6-14d43333c0a2" class="cell" data-execution_count="12">
+<details class="code-fold">
+<summary>Adding number of FL layers</summary>
 <div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>n_avg <span class="op">=</span> <span class="dv">3</span></span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>hidden_dims <span class="op">=</span> [[<span class="dv">84</span>], [<span class="dv">120</span>, <span class="dv">84</span>], [<span class="dv">120</span>, <span class="dv">120</span>, <span class="dv">84</span>, <span class="dv">84</span>], [<span class="dv">120</span>, <span class="dv">120</span>, <span class="dv">120</span>, <span class="dv">84</span>, <span class="dv">84</span>, <span class="dv">84</span>]]</span>
 <span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>test_accs <span class="op">=</span> []</span>
@@ -535,6 +561,7 @@ window.Quarto = {
 <span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>plt.plot([<span class="bu">len</span>(i) <span class="cf">for</span> i <span class="kw">in</span> hidden_dims], test_accs)</span>
 <span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">'# of FL layers'</span>)<span class="op">;</span> plt.ylabel(<span class="st">'Test Accuracy'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 <div class="cell-output cell-output-display" data-execution_count="12">
 <pre><code>Text(0, 0.5, 'Test Accuracy')</code></pre>
 </div>
@@ -552,6 +579,8 @@ window.Quarto = {
 </ol>
 <p>Lets first experiment with different learning rates and try <span class="math inline">\(\{0.01, 0.05, 0.1, 0.5\}\)</span>:</p>
 <div id="33eaf605-010c-456b-a5fa-36c8493a41f3" class="cell" data-execution_count="13">
+<details class="code-fold">
+<summary>Different learning rates</summary>
 <div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>lrs <span class="op">=</span> [<span class="fl">0.01</span>, <span class="fl">0.05</span>, <span class="fl">0.1</span>, <span class="fl">0.5</span>]</span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>test_accs <span class="op">=</span> []</span>
 <span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> lr <span class="kw">in</span> lrs:</span>
@@ -562,6 +591,7 @@ window.Quarto = {
 <span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>plt.plot(lrs, test_accs)</span>
 <span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">'Learning Rate'</span>)<span class="op">;</span> plt.ylabel(<span class="st">'Test Accuracy'</span>)</span>
 <span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>plt.xscale(<span class="st">'log'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
@@ -577,11 +607,14 @@ window.Quarto = {
 <p>Try out the improved network on the original MNIST dataset</p>
 <p>We can reuse code from above:</p>
 <div id="d19c8168" class="cell">
+<details class="code-fold">
+<summary>ModernLeNet of MNIST</summary>
 <div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>_, _, train_loader_MNIST, test_loader_MNIST <span class="op">=</span> get_data(datasets.MNIST, <span class="dv">128</span>)</span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>net <span class="op">=</span> ModernLeNet(<span class="dv">10</span>)</span>
 <span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>losses <span class="op">=</span> train(net, train_loader, verbose <span class="op">=</span> <span class="va">False</span>, lr <span class="op">=</span> <span class="fl">0.01</span>)</span>
 <span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>test_acc <span class="op">=</span> eval_model(net, test_loader) </span>
 <span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>plot_results(losses, test_acc)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 <div class="cell-output cell-output-stdout">
 <pre><code>Epoch: 1    Loss: 0.75
 Epoch: 2    Loss: 0.53
@@ -614,16 +647,21 @@ Epoch: 15   Loss: 0.30</code></pre>
 <p>Display the activations of the first and second layer of LeNet for different inputs (e.g., sweaters and coats)</p>
 <p>Lets retrain the ModernLeNet on FashionMNIST:</p>
 <div id="97c993d4-0114-4e93-bc84-56ae808535bf" class="cell" data-execution_count="25">
+<details class="code-fold">
+<summary>Retrain ModernLeNet on MNIST</summary>
 <div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>net <span class="op">=</span> ModernLeNet(<span class="dv">10</span>)</span>
 <span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>losses <span class="op">=</span> train(net, train_loader, verbose <span class="op">=</span> <span class="va">False</span>)</span>
 <span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>test_acc <span class="op">=</span> eval_model(net, test_loader) </span>
 <span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">'Test acc: '</span>, test_acc)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 <div class="cell-output cell-output-stdout">
 <pre><code>Test acc:  0.8936</code></pre>
 </div>
 </div>
 <p>And now get a few sweater and coat images:</p>
 <div id="ffb06e02-d113-4b7d-8c11-745ec57251f3" class="cell" data-execution_count="148">
+<details class="code-fold">
+<summary>Get images of coats and sweaters</summary>
 <div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>train_dataset, _, train_loader, _ <span class="op">=</span> get_data(datasets.FashionMNIST, <span class="dv">128</span>)</span>
 <span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>imgs, ys <span class="op">=</span> <span class="bu">next</span>(<span class="bu">iter</span>(train_loader))</span>
 <span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -632,10 +670,14 @@ Epoch: 15   Loss: 0.30</code></pre>
 <span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>coats_ix <span class="op">=</span> [ix <span class="cf">for</span> ix, y <span class="kw">in</span> <span class="bu">enumerate</span>(ys) <span class="cf">if</span> y <span class="op">==</span> coat_ix][:n]</span>
 <span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>sweaters_ix <span class="op">=</span> [ix <span class="cf">for</span> ix, y <span class="kw">in</span> <span class="bu">enumerate</span>(ys) <span class="cf">if</span> y <span class="op">==</span> sweater_ix][:n]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <p>Remmember that the ReLUs are at indeces 1 and 4:</p>
 <div id="fd36fb22-c1c5-4144-8eff-d34366150d36" class="cell" data-execution_count="127">
+<details class="code-fold">
+<summary>Code</summary>
 <div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>net</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 <div class="cell-output cell-output-display" data-execution_count="127">
 <pre><code>ModernLeNet(
   (net): Sequential(
@@ -657,6 +699,8 @@ Epoch: 15   Loss: 0.30</code></pre>
 </div>
 <p>We can subscript into Sequential to obtain the activations and each channel along with the input:</p>
 <div id="ad4b6973-6490-4c5e-bd83-f17003f99e10" class="cell" data-execution_count="156">
+<details class="code-fold">
+<summary>Function to display activations</summary>
 <div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Prepare img: add minibatch dim and move to device</span></span>
 <span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> disp_acts(end_layer, images <span class="op">=</span> <span class="va">None</span>):</span>
 <span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -681,6 +725,7 @@ Epoch: 15   Loss: 0.30</code></pre>
 <span id="cb25-22"><a href="#cb25-22" aria-hidden="true" tabindex="-1"></a>        f.show()</span>
 <span id="cb25-23"><a href="#cb25-23" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb25-24"><a href="#cb25-24" aria-hidden="true" tabindex="-1"></a>disp_acts(<span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
@@ -697,7 +742,10 @@ Epoch: 15   Loss: 0.30</code></pre>
 </div>
 </div>
 <div id="baa71283-a587-445f-a3cf-e4bd0f69ae5d" class="cell" data-execution_count="157">
+<details class="code-fold">
+<summary>Code</summary>
 <div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>disp_acts(<span class="dv">4</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
@@ -720,7 +768,10 @@ Epoch: 15   Loss: 0.30</code></pre>
 <p>What happens to the activations when you feed significantly different images into the network (e.g., cats, cars, or even random noise)?</p>
 <p>Lets try inputing random noise:</p>
 <div id="4346a19b-978f-421b-8f5f-2add933e0378" class="cell" data-execution_count="163">
+<details class="code-fold">
+<summary>Code</summary>
 <div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>disp_acts(<span class="dv">1</span>, [torch.randn((<span class="dv">1</span>, <span class="dv">28</span>, <span class="dv">28</span>)), torch.randn((<span class="dv">1</span>, <span class="dv">28</span>, <span class="dv">28</span>))])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
@@ -737,7 +788,10 @@ Epoch: 15   Loss: 0.30</code></pre>
 </div>
 </div>
 <div id="c3c51cda-91c9-44c3-837e-b727ac8dac38" class="cell" data-execution_count="164">
+<details class="code-fold">
+<summary>Code</summary>
 <div class="sourceCode cell-code" id="cb28"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>disp_acts(<span class="dv">4</span>, [torch.randn((<span class="dv">1</span>, <span class="dv">28</span>, <span class="dv">28</span>)), torch.randn((<span class="dv">1</span>, <span class="dv">28</span>, <span class="dv">28</span>))])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">

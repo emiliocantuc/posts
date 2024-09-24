@@ -205,6 +205,8 @@ window.Quarto = {
 <p>To support the first claim, the authors argue if networks simply memorize inputs they perform equally when on different training examples. However, if networks learn patterns, there should be points that are easy to learn because they fit these patterns better than others. To see if this is the case they train an MLP for a single epoch starting from 100 different initializations and data shufflings and log the percentage of times an example was correctly classified.</p>
 <p>The experiment is performed with the CIFAR10 dataset, a noisy input version <em>RandX</em>, and a noisy label version <em>RandY</em>. We first define dataset wrappers to implement the noisy variants. Note that for epoch-to-epoch consistency we determine which examples to corrupt at initialization.</p>
 <div id="cell-6" class="cell" data-execution_count="265">
+<details class="code-fold">
+<summary>Random dataset wrappers</summary>
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> RandX(Dataset):</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Injects example noise into dataset by replacing x% of inputs with random gaussian N(0, 1) noise"""</span></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, dataset, x <span class="op">=</span> <span class="fl">1.0</span>):</span>
@@ -240,9 +242,12 @@ window.Quarto = {
 <span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__getitem__</span>(<span class="va">self</span>, idx):</span>
 <span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>        X, y <span class="op">=</span> <span class="va">self</span>.dataset[idx]</span>
 <span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> X, <span class="va">self</span>.modified.get(idx, y)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <p>Now we define a standard training loop, initialization functions, and the MLP specified in the paper.</p>
 <div id="cell-8" class="cell" data-execution_count="8">
+<details class="code-fold">
+<summary>Model initing and training functions</summary>
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> train(model, train, val, optimizer, criterion <span class="op">=</span> nn.CrossEntropyLoss(), epochs <span class="op">=</span> <span class="dv">100</span>, batch_size <span class="op">=</span> <span class="dv">256</span>, save_path <span class="op">=</span> <span class="st">'models/tmp'</span>):</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    model.to(device)</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    train <span class="op">=</span> DataLoader(train, batch_size <span class="op">=</span> batch_size, shuffle <span class="op">=</span> <span class="va">True</span>)</span>
@@ -278,8 +283,11 @@ window.Quarto = {
 <span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> in_device:model.to(device)<span class="op">;</span> model(imgs.to(device))</span>
 <span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>        _ <span class="op">=</span> model(imgs)</span>
 <span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>        model.<span class="bu">apply</span>(_init_weights)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <div id="cell-9" class="cell" data-execution_count="248">
+<details class="code-fold">
+<summary>MLP definition</summary>
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MLP(nn.Module):</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, n_classes <span class="op">=</span> <span class="dv">10</span>):</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>        <span class="bu">super</span>().<span class="fu">__init__</span>()</span>
@@ -294,9 +302,12 @@ window.Quarto = {
 <span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> forward(<span class="va">self</span>, x):</span>
 <span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">self</span>.model(x)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <p>And run the experiment, training models for a single epoch as in the paper but also after 10 epochs to investigate how results vary.</p>
 <div id="cell-11" class="cell">
+<details class="code-fold">
+<summary>Get estimated P(correct)</summary>
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> add_missclassified(missclassified, model, test_set, batch_size <span class="op">=</span> <span class="dv">256</span>):</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    model <span class="op">=</span> model.to(device)<span class="op">;</span> model.<span class="bu">eval</span>()</span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    test <span class="op">=</span> DataLoader(test_set, batch_size <span class="op">=</span> batch_size, shuffle <span class="op">=</span> <span class="va">False</span>)</span>
@@ -322,8 +333,11 @@ window.Quarto = {
 <span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>gen_fig_1(epochs <span class="op">=</span> <span class="dv">1</span>, n_inits <span class="op">=</span> <span class="dv">100</span>)</span>
 <span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>gen_fig_1(epochs <span class="op">=</span> <span class="dv">10</span>, n_inits <span class="op">=</span> <span class="dv">100</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <div id="cell-12" class="cell" data-execution_count="249">
+<details class="code-fold">
+<summary>Plot results</summary>
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>f, (ax1, ax2) <span class="op">=</span> plt.subplots(<span class="dv">1</span>, <span class="dv">2</span>, figsize <span class="op">=</span> (<span class="dv">9</span>, <span class="dv">4</span>), sharey <span class="op">=</span> <span class="va">True</span>)</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> ax, epochs <span class="kw">in</span> <span class="bu">zip</span>([ax1, ax2], [<span class="dv">1</span>, <span class="dv">10</span>]):</span>
@@ -344,6 +358,7 @@ window.Quarto = {
 <span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>f.supylabel(<span class="st">'P(correct)'</span>)</span>
 <span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>f.supxlabel(<span class="st">'Example(sorted by P(correct))'</span>)</span>
 <span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>f.tight_layout()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
@@ -355,6 +370,8 @@ window.Quarto = {
 <p>Observe that the left is a figure very similar to the paper’s. Whereas real data has easy patterns that can be learned in a single epoch, random data does not and networks must resort to memorization. After 10 epochs we observe that the networks trained on random data manage to improve the performance on a few points at the expense of the rest, whose performance becomes worse than random.</p>
 <p>Out of curiosity here are the 10 easiest and hardest examples.</p>
 <div id="cell-15" class="cell" data-execution_count="199">
+<details class="code-fold">
+<summary>Plot hardest and easiest examples</summary>
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>n <span class="op">=</span> <span class="dv">10</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>f, ax <span class="op">=</span> plt.subplots(<span class="dv">2</span>, n, figsize <span class="op">=</span> (n <span class="op">-</span> <span class="dv">2</span>, <span class="dv">2</span>))</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i, idx <span class="kw">in</span> <span class="bu">enumerate</span>(torch.sort(p).indices[:n]):</span>
@@ -371,6 +388,7 @@ window.Quarto = {
 <span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>f.suptitle(<span class="st">'Hardest (top) and easiest (bottom) examples'</span>)</span>
 <span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>f.tight_layout()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
@@ -384,6 +402,8 @@ window.Quarto = {
 <h2 class="anchored" data-anchor-id="fig-2">Fig 2</h2>
 <p>The fact that networks learn patterns when trained on real data and don’t when trained on noise can also be visualized by plotting the first layer weights of a convolutional network. We show the weights for networks trained for 10 epochs on real and random data.</p>
 <div id="cell-18" class="cell" data-execution_count="4">
+<details class="code-fold">
+<summary>ConvNet definition</summary>
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> ConvNet(nn.Module):</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, num_classes):</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>        <span class="bu">super</span>(ConvNet, <span class="va">self</span>).<span class="fu">__init__</span>()</span>
@@ -430,8 +450,11 @@ window.Quarto = {
 <span id="cb7-44"><a href="#cb7-44" aria-hidden="true" tabindex="-1"></a>        scheduler.step()</span>
 <span id="cb7-45"><a href="#cb7-45" aria-hidden="true" tabindex="-1"></a>        val_loss, val_acc <span class="op">=</span> eval_model(model, val)</span>
 <span id="cb7-46"><a href="#cb7-46" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="ss">f'Epoch </span><span class="sc">{</span>epoch <span class="op">+</span> <span class="dv">1</span><span class="sc">}</span><span class="ss">/</span><span class="sc">{</span>epochs<span class="sc">}</span><span class="ss">, Loss: </span><span class="sc">{</span>val_loss<span class="sc">:.4f}</span><span class="ss">, Accuracy: </span><span class="sc">{</span>val_acc<span class="sc">:.4f}</span><span class="ss">'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <div id="cell-19" class="cell" data-execution_count="165">
+<details class="code-fold">
+<summary>Train models</summary>
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>cifar10_model <span class="op">=</span> ConvNet(num_classes <span class="op">=</span> n_classes)</span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>randY_model <span class="op">=</span> ConvNet(num_classes <span class="op">=</span> n_classes)</span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -439,8 +462,11 @@ window.Quarto = {
 <span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    initialize_model(model, DataLoader(dataset, batch_size <span class="op">=</span> <span class="dv">256</span>))</span>
 <span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    train_conv(model, dataset, test_set, optim.SGD(model.parameters(), lr <span class="op">=</span> <span class="fl">0.01</span>, momentum <span class="op">=</span> <span class="fl">0.9</span>), epochs <span class="op">=</span> <span class="dv">10</span>)</span>
 <span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    torch.save(model.state_dict(), <span class="ss">f'models/fig2_</span><span class="sc">{</span>model<span class="sc">.</span>__class__<span class="sc">.</span><span class="va">__name__</span><span class="sc">}</span><span class="ss">'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <div id="cell-20" class="cell" data-execution_count="182">
+<details class="code-fold">
+<summary>Plot filters</summary>
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>f, (ax1, ax2) <span class="op">=</span> plt.subplots(<span class="dv">1</span>, <span class="dv">2</span>, figsize <span class="op">=</span> (<span class="dv">9</span>, <span class="dv">4</span>), sharey <span class="op">=</span> <span class="va">True</span>)</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> name, model, ax <span class="kw">in</span> <span class="bu">zip</span>([<span class="st">'Cifar 10'</span>, <span class="st">'RandY'</span>], [cifar10_model, randY_model], [ax1, ax2]):</span>
@@ -452,6 +478,7 @@ window.Quarto = {
 <span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>    ax.imshow(filter_img.permute(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">0</span>))</span>
 <span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>    ax.set_title(name)</span>
 <span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>    ax.axis(<span class="st">'off'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
@@ -478,6 +505,8 @@ window.Quarto = {
 <p>To estimate the density of points close to decision boundaries we might perturb the original data points within a box of size <span class="math inline">\(r\)</span> and see if we cross the boundary. If a point crosses a boundary we call it “critical”. The <em>Critical Sample Ratio</em> is then the proportion of points that are critical and we expect simpler networks to have lower CSRs.</p>
 <p>The perturbation done to data points is not totally random. The technique used by the paper is presented in Algorithm 1, borrows ideas from adversarial attacks, and is called Langevin Adversarial Sample Search (LASS). Here is how I implemented it.</p>
 <div id="cell-25" class="cell" data-execution_count="195">
+<details class="code-fold">
+<summary>LASS implementation</summary>
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> standard_normal(shape):</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    r <span class="op">=</span> torch.randn(shape)</span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    r <span class="op">=</span> r.to(device)</span>
@@ -547,9 +576,12 @@ window.Quarto = {
 <span id="cb10-67"><a href="#cb10-67" aria-hidden="true" tabindex="-1"></a>        converged, _ <span class="op">=</span> lass(model, images, <span class="op">**</span>lass_kwargs)</span>
 <span id="cb10-68"><a href="#cb10-68" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> converged: csr <span class="op">+=</span> <span class="dv">1</span></span>
 <span id="cb10-69"><a href="#cb10-69" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> csr <span class="op">/</span> n_examples</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <p>The paper sets the radius we search for adversarial examples to <span class="math inline">\(r = 30/255\)</span> because it was small enough to not be noticed by a human evaluator. Here is an example.</p>
 <div id="cell-27" class="cell" data-execution_count="335">
+<details class="code-fold">
+<summary>Adversarial example</summary>
 <div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> cifar10_model</span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>model.<span class="bu">eval</span>()<span class="op">;</span> model.to(device)</span>
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>set_seed(<span class="dv">5</span>)</span>
@@ -569,6 +601,7 @@ window.Quarto = {
 <span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>            ax1.set_title(<span class="ss">f'Original. Predicted: </span><span class="sc">{</span>test_set<span class="sc">.</span>classes[model(x).argmax().item()]<span class="sc">}</span><span class="ss">'</span>)</span>
 <span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>            ax2.set_title(<span class="ss">f'Adversarial. Predicted: </span><span class="sc">{</span>test_set<span class="sc">.</span>classes[model(adv).argmax().item()]<span class="sc">}</span><span class="ss">'</span>)</span>
 <span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a>        <span class="cf">break</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
@@ -579,6 +612,8 @@ window.Quarto = {
 </div>
 <p>And now try to compute the Critical Sample Ratio as we train models to reproduce Figure 9.</p>
 <div id="cell-29" class="cell">
+<details class="code-fold">
+<summary>ConvNet training loop</summary>
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> train_fig9(model, train, val, optimizer, criterion <span class="op">=</span> nn.CrossEntropyLoss(), epochs <span class="op">=</span> <span class="dv">100</span>, batch_size <span class="op">=</span> <span class="dv">256</span>):</span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    val_accs, csrs <span class="op">=</span> [], []</span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    model.to(device)</span>
@@ -612,8 +647,11 @@ window.Quarto = {
 <span id="cb12-31"><a href="#cb12-31" aria-hidden="true" tabindex="-1"></a>    initialize_model(model, DataLoader(dataset, batch_size <span class="op">=</span> <span class="dv">256</span>))</span>
 <span id="cb12-32"><a href="#cb12-32" aria-hidden="true" tabindex="-1"></a>    val_accs, csrs <span class="op">=</span> train_fig9(model, dataset, test_set, optim.SGD(model.parameters(), lr <span class="op">=</span> <span class="fl">0.01</span>, momentum <span class="op">=</span> <span class="fl">0.9</span>), epochs <span class="op">=</span> <span class="dv">141</span>)</span>
 <span id="cb12-33"><a href="#cb12-33" aria-hidden="true" tabindex="-1"></a>    torch.save({<span class="st">'val_accs'</span>: val_accs, <span class="st">'csrs'</span>: csrs}, <span class="ss">f'logs/fig9_r=45_</span><span class="sc">{</span>dataset<span class="sc">.</span>__class__<span class="sc">.</span><span class="va">__name__</span><span class="sc">}</span><span class="ss">'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <div id="cell-30" class="cell" data-execution_count="343">
+<details class="code-fold">
+<summary>Plot results</summary>
 <div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>plt.plot(np.arange(<span class="dv">0</span>, <span class="dv">141</span>, <span class="dv">10</span>), torch.load(<span class="st">'logs/fig9_CIFAR10'</span>)[<span class="st">'csrs'</span>], <span class="st">'b'</span>, label <span class="op">=</span> <span class="st">'CIFAR10'</span>)</span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>plt.plot(np.arange(<span class="dv">0</span>, <span class="dv">141</span>, <span class="dv">10</span>), [<span class="dv">0</span>] <span class="op">*</span> <span class="dv">15</span>, <span class="st">'r--'</span>, label <span class="op">=</span> <span class="st">'RandX (?)'</span>)</span>
 <span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>plt.plot(np.arange(<span class="dv">0</span>, <span class="dv">141</span>, <span class="dv">10</span>), torch.load(<span class="st">'logs/fig9_RandY'</span>)[<span class="st">'csrs'</span>], <span class="st">'g'</span>, label <span class="op">=</span> <span class="st">'RandY'</span>)</span>
@@ -621,6 +659,7 @@ window.Quarto = {
 <span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>plt.legend()</span>
 <span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">'Epoch'</span>)</span>
 <span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">'Critical Sample Ratio (CSR)'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 <div class="cell-output cell-output-display" data-execution_count="343">
 <pre><code>Text(0, 0.5, 'Critical Sample Ratio (CSR)')</code></pre>
 </div>
