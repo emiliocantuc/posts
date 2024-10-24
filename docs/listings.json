@@ -2,6 +2,7 @@
   {
     "listing": "/index.html",
     "items": [
+      "/posts/wolv-events/index.html",
       "/dl-playground/d2l-exercises/9-5.html",
       "/dl-playground/nn-memorization/index.html",
       "/posts/lsh/index.html",
