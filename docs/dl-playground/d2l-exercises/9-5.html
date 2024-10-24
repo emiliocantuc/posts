@@ -218,7 +218,7 @@ window.Quarto = {
 </figure>
 </div>
 <p>We first sort out the data we will feed the RNN, mainly following sections <a href="">9.2</a> and <a href="">9.3</a> implemented from scratch.</p>
-<div id="cell-7" class="cell" data-execution_count="1099">
+<div id="cell-7" class="cell" data-execution_count="2">
 <details class="code-fold">
 <summary>Get and preprocess data</summary>
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># url = 'http://d2l-data.s3-accelerate.amazonaws.com/' + 'timemachine.txt'</span></span>
@@ -889,6 +889,43 @@ alpha: 10   generation:friday the shate in the si</code></pre>
 </figure>
 </div>
 </div>
+</div>
+<div id="cell-70" class="cell" data-execution_count="3">
+<details open="" class="code-fold">
+<summary>RNN Language Model</summary>
+<div class="sourceCode cell-code" id="cb43"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> RNNLM(nn.Module):</span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, vocab_size, num_hiddens):</span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>        <span class="bu">super</span>().<span class="fu">__init__</span>()</span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.vocab_size <span class="op">=</span> vocab_size</span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.rnn <span class="op">=</span> nn.RNN(vocab_size, num_hiddens)</span>
+<span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.linear <span class="op">=</span> nn.Linear(num_hiddens, vocab_size)</span>
+<span id="cb43-8"><a href="#cb43-8" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb43-9"><a href="#cb43-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> embed(<span class="va">self</span>, X): <span class="cf">return</span> F.one_hot(X.T, <span class="va">self</span>.vocab_size).<span class="bu">type</span>(torch.float32)</span>
+<span id="cb43-10"><a href="#cb43-10" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb43-11"><a href="#cb43-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> output_layer(<span class="va">self</span>, hidden_states):</span>
+<span id="cb43-12"><a href="#cb43-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> torch.stack([<span class="va">self</span>.linear(H) <span class="cf">for</span> H <span class="kw">in</span> hidden_states])</span>
+<span id="cb43-13"><a href="#cb43-13" aria-hidden="true" tabindex="-1"></a>        <span class="co"># return torch.stack([torch.matmul(H, self.W_hq) + self.b_q for H in hidden_states])</span></span>
+<span id="cb43-14"><a href="#cb43-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> forward(<span class="va">self</span>, X, H <span class="op">=</span> <span class="va">None</span>):</span>
+<span id="cb43-15"><a href="#cb43-15" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">self</span>.rnn(<span class="va">self</span>.embed(X), H)</span>
+<span id="cb43-16"><a href="#cb43-16" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb43-17"><a href="#cb43-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">@torch.no_grad</span>()</span>
+<span id="cb43-18"><a href="#cb43-18" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> generate(<span class="va">self</span>, preamble, num_chars, char_to_ix):</span>
+<span id="cb43-19"><a href="#cb43-19" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb43-20"><a href="#cb43-20" aria-hidden="true" tabindex="-1"></a>        generation <span class="op">=</span> preamble</span>
+<span id="cb43-21"><a href="#cb43-21" aria-hidden="true" tabindex="-1"></a>        prepare_X <span class="op">=</span> <span class="kw">lambda</span> char: <span class="va">self</span>.embed(torch.Tensor([[char_to_ix[char]]]).<span class="bu">long</span>())</span>
+<span id="cb43-22"><a href="#cb43-22" aria-hidden="true" tabindex="-1"></a>        hidden_state <span class="op">=</span> <span class="va">None</span></span>
+<span id="cb43-23"><a href="#cb43-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-24"><a href="#cb43-24" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> char <span class="kw">in</span> preamble: <span class="co"># warm-up</span></span>
+<span id="cb43-25"><a href="#cb43-25" aria-hidden="true" tabindex="-1"></a>            hidden_state <span class="op">=</span> <span class="va">self</span>.rnn(prepare_X(char), hidden_state)[<span class="op">-</span><span class="dv">1</span>] <span class="co"># only the last hidden state</span></span>
+<span id="cb43-26"><a href="#cb43-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-27"><a href="#cb43-27" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(num_chars): <span class="co"># generation</span></span>
+<span id="cb43-28"><a href="#cb43-28" aria-hidden="true" tabindex="-1"></a>            hidden_state <span class="op">=</span> <span class="va">self</span>.rnn(prepare_X(generation[<span class="op">-</span><span class="dv">1</span>]), hidden_state)[<span class="op">-</span><span class="dv">1</span>]</span>
+<span id="cb43-29"><a href="#cb43-29" aria-hidden="true" tabindex="-1"></a>            output <span class="op">=</span> <span class="va">self</span>.output_layer([hidden_state])</span>
+<span id="cb43-30"><a href="#cb43-30" aria-hidden="true" tabindex="-1"></a>            generation <span class="op">+=</span> ix_to_char[output.argmax(dim <span class="op">=</span> <span class="dv">2</span>).item()]</span>
+<span id="cb43-31"><a href="#cb43-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-32"><a href="#cb43-32" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> generation</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 
 

@@ -12,7 +12,7 @@ listing:
   filter-ui: false
   date-format: short
   image-height: "100"
-  field-display-names:
+  field-display-names:    
     author: false
 page-layout: full
 format:
